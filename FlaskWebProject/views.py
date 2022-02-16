@@ -66,11 +66,11 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user is None or not user.check_password(form.password.data):
-            flash('Invalid username or password')
             app.logger.warning('Invalid logging attempt.')
+            flash('Invalid username or password')
             return redirect(url_for('login'))
+        app.logger.warning('admin logged in successfully.')
         login_user(user, remember=form.remember_me.data)
-        app.logger.warning(user + ' logged in successfully.')
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
             next_page = url_for('home')
@@ -84,7 +84,6 @@ def authorized():
     if request.args.get('state') != session.get("state"):
         return redirect(url_for("home"))  # No-OP. Goes back to Index page
     if "error" in request.args:  # Authentication/Authorization failure
-        app.logger.warning('Invalid logging attempt.')
         return render_template("auth_error.html", result=request.args)
     if request.args.get('code'):
         cache = _load_cache()
@@ -100,7 +99,6 @@ def authorized():
         # Here, we'll use the admin username for anyone who is authenticated by MS
         user = User.query.filter_by(username="admin").first()
         login_user(user)
-        app.logger.warning(user + ' logged in successfully.')
         _save_cache(cache)
     return redirect(url_for('home'))
 
